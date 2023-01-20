@@ -15,3 +15,20 @@ class GradientPolicy(nn.Module):
     scale = self.fc_std(x)
     scale = F.softplus(scale) + 0.001
     return loc, scale
+    
+    
+
+
+class ValueNet(nn.Module):
+
+  def __init__(self, in_features, hidden_size=128):
+    super().__init__()
+    self.fc1 = nn.Linear(in_features, hidden_size)
+    self.fc2 = nn.Linear(hidden_size, hidden_size)
+    self.fc3 = nn.Linear(hidden_size, 1)
+
+  def forward(self, x):
+    x = F.relu(self.fc1(x))
+    x = F.relu(self.fc2(x))
+    x = self.fc3(x)
+    return x

@@ -247,13 +247,10 @@ class NormalizeObservation(gym.core.Wrapper):
 
 
 
-defines a function called create_env which takes three parameters env_name, num_envs and episode length, The function creates an instance of the gym environment by calling the gym.make() function with the given and the number of environments and the length of the episode as arguments. Then it wraps the environment with the "NormalizeObservation" class defined earlier. This class normalizes the observations coming from the environment by using the running mean and standard deviation, the function returns the wrapped environment. Then creates an environment for running the 'ant environment with a total of 10 parallel environments. The env.reset() function is then called, which resets the environment and returns the initial observation of the environment.
+registering an environment for use with the gym library, it does so by creating a new environment object using the envs.create_gym_env function with the environment name set to 'ant' and then registering the environment with gym, giving it the name 'ant'. This allows the environment to be accessed and used within the gym framework.
 ```bash
-def create_env(env_name, num_envs=256, episode_length=1000):
-  env = gym.make(env_name, batch_size=num_envs, episode_length=episode_length)
-  env = to_torch.JaxToTorchWrapper(env, device=device)
-  env = NormalizeObservation(env)
-  return env
+entry_point = functools.partial(envs.create_gym_env, env_name='ant')
+gym.register('ant', entry_point=entry_point)
 ```
 
 

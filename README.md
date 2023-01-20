@@ -9,6 +9,10 @@ Implementation Guide: [Robot Control Using Trust Region Policy Optimization (TRP
 
 
 installs the X Virtual Framebuffer (Xvfb) package to enables running graphical applications, such as gym, without the need for a physical display.
+![image](https://user-images.githubusercontent.com/100143830/213748018-aa1da120-7102-4a78-9037-e64c23c2ab07.png)
+![image](https://user-images.githubusercontent.com/100143830/213748194-ae573d8e-3eb0-4e1b-8378-abbd87f5bf55.png)
+
+
 ```bash
 apt-get install -y xvfb
 ```

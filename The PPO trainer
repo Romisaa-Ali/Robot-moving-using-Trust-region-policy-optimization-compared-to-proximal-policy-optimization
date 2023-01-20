@@ -1,0 +1,5 @@
+algo = PPO("brax-ant-v0")
+
+trainer = Trainer(gpus=num_gpus, max_epochs=1000)
+
+trainer.fit(algo)

@@ -7,15 +7,19 @@ TRPO and PPO are algorithms used to optimize control policies in reinforcement l
 Implementation Guide: [Robot Control Using Trust Region Policy Optimization (TRPO) vs Proximal Policy Optimization (PPO)]:
 
 
-
-
-
 installs the X Virtual Framebuffer (Xvfb) package:
 to enables running graphical applications, such as gym, without the need for a physical display.
-apt-get install -y xvfb
+
 
 The following code installs the necessary dependencies for running a reinforcement learning algorithm on a virtual frame buffer:Its install gym==0.23.1, that provides a range of environments for developing and comparing reinforcement learning algorithms, pytorch-lightning==1.6:  its library that simplifies the prototyping and research process for deep learning models.
 pyvirtualdisplay: A Python library that acts as a wrapper for Xvfb and other virtual display libraries.
+```bash
+git clone https://github.com/eriklindernoren/PyTorch-YOLOv3
+cd PyTorch-YOLOv3/
+pip3 install poetry --user
+poetry install
+```
+
  Install these packages together will allow you to run reinforcement learning algorithm on virtual frame buffer.
  pip install gym==0.23.1 \
     pytorch-lightning==1.6 \

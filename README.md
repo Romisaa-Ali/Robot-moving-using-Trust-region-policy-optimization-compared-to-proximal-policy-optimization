@@ -12,13 +12,15 @@ Implementation Guide: [Robot Control Using Trust Region Policy Optimization (TRP
 
 installs the X Virtual Framebuffer (Xvfb) package:
 to enables running graphical applications, such as gym, without the need for a physical display.
-![image](https://user-images.githubusercontent.com/100143830/213739403-ada96470-05e8-4892-af7a-d62cf96f1ad5.png)
-
+apt-get install -y xvfb
 
 The following code installs the necessary dependencies for running a reinforcement learning algorithm on a virtual frame buffer:Its install gym==0.23.1, that provides a range of environments for developing and comparing reinforcement learning algorithms, pytorch-lightning==1.6:  its library that simplifies the prototyping and research process for deep learning models.
 pyvirtualdisplay: A Python library that acts as a wrapper for Xvfb and other virtual display libraries.
  Install these packages together will allow you to run reinforcement learning algorithm on virtual frame buffer.
-![image](https://user-images.githubusercontent.com/100143830/213739259-3d370495-3b1f-4947-a924-17878c4dc700.png)
+ pip install gym==0.23.1 \
+    pytorch-lightning==1.6 \
+    pyvirtualdisplay
+
 
 
 Install the brax library  from its Github repository. 

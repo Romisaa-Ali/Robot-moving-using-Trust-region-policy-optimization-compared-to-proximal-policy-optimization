@@ -1,0 +1,89 @@
+class TRPO(LightningModule):
+
+  def __init__(self, env_name, num_envs=2048, episode_length=1000,
+               batch_size=2048, hidden_size=256, samples_per_epoch=20,
+               value_lr=1e-3, gamma=0.99, lamb=0.95,  kl_limit=0.25, 
+               v_optim=AdamW, pi_optim=ConjugateGradientOptimizer):
+    
+    super().__init__()
+
+    self.env = create_env(env_name, num_envs=num_envs, episode_length=episode_length)
+    test_env = gym.make(env_name, episode_length=episode_length)
+    test_env = to_torch.JaxToTorchWrapper(test_env, device=device)
+    self.test_env = NormalizeObservation(test_env)
+    self.test_env.obs_rms = self.env.obs_rms
+
+    obs_size = self.env.observation_space.shape[1]
+    action_dims = self.env.action_space.shape[1]
+
+    self.policy = GradientPolicy(obs_size, action_dims, hidden_size)
+    self.value_net = ValueNet(obs_size, hidden_size)
+    self.target_value_net = copy.deepcopy(self.value_net)
+
+    self.pi_optim = ConjugateGradientOptimizer(self.policy.parameters(), max_constraint_value=kl_limit)
+
+    self.dataset = RLDataset(self.env, self.policy, self.target_value_net,
+                             samples_per_epoch, gamma, lamb)
+
+    self.save_hyperparameters()
+    self.videos = []
+
+    self.automatic_optimization = False
+
+  def configure_optimizers(self):
+    value_opt = self.hparams.v_optim(self.value_net.parameters(), lr=self.hparams.value_lr)
+    pi_optim = ConjugateGradientOptimizer(self.policy.parameters(), max_constraint_value=self.hparams.kl_limit)
+    return [value_opt, pi_optim]
+
+  def train_dataloader(self):
+    return DataLoader(dataset=self.dataset, batch_size=self.hparams.batch_size)    
+
+  def training_step(self, batch, batch_idx):
+    obs_b, loc_b, scale_b, action_b, reward_b, gae_b, target_b = batch
+    v_optim, pi_optim = self.optimizers()
+
+    state_values = self.value_net(obs_b)
+    v_loss = F.smooth_l1_loss(state_values, target_b)
+    self.log("episode/Value Loss", v_loss)
+
+    v_optim.zero_grad()
+    self.manual_backward(v_loss)
+    v_optim.step()
+
+    new_loc, new_scale = self.policy(obs_b)
+    dist = Normal(new_loc, new_scale)
+    log_prob = dist.log_prob(action_b).sum(dim=-1, keepdim=True)
+
+    prev_dist = Normal(loc_b, scale_b)
+    prev_log_prob = prev_dist.log_prob(action_b).sum(dim=-1, keepdim=True)
+
+    def loss_fn():
+      loss = - torch.exp(log_prob - prev_log_prob) * gae_b
+      return loss.mean()
+
+    def constraint_fn():
+      constraint = kl_divergence(prev_dist, dist).sum(dim=-1)
+      return constraint.mean()
+    
+    closure = lambda: (loss_fn, constraint_fn)
+
+    loss = loss_fn()
+
+    pi_optim.zero_grad()
+    self.manual_backward(loss, retain_graph=True)
+    pi_optim.step(closure)
+
+    self.log("episode/Policy Loss", loss)
+    self.log("episode/Reward", reward_b.mean())
+
+
+  def training_epoch_end(self, training_step_outputs):
+    self.target_value_net.load_state_dict(self.value_net.state_dict())
+
+    if self.current_epoch % 10 == 0:
+      average_return = test_agent(self.test_env, self.hparams.episode_length, self.policy, episodes=1)
+      self.log("episode/Average Return", average_return)
+
+    if self.current_epoch % 50 == 0:
+      video = create_video(self.test_env, self.hparams.episode_length, policy=self.policy)
+      self.videos.append(video)

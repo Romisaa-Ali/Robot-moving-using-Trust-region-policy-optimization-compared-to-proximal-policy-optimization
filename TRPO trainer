@@ -1,0 +1,5 @@
+algo = TRPO('ant')
+
+trainer = Trainer(gpus=num_gpus, max_epochs=10)
+
+trainer.fit(algo)
